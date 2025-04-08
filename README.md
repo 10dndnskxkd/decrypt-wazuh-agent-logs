@@ -1,6 +1,9 @@
 # decrypt-wazuh-agent-logs
 
-Sample on how Wazuh Agent encrypts its data
+Sample on how Wazuh Agent encrypts its data.
+
+More information on how it works can be found on Wazuh's Documentation Page.
+https://documentation.wazuh.com/current/development/message-format.html
 
 # AES Crypto Method
 Expected Output (AES Encryption):
