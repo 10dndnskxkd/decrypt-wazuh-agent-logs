@@ -20,14 +20,19 @@ def compress_data(merged_data):
 
 # Function to add "!" padding to the compressed data
 def add_padding(compressed_data):
-    padding_len = (8 - len(compressed_data) % 8)
+    padding_len = (16 - len(compressed_data) % 16)
     padding = b'!' * padding_len
     return padding + compressed_data
 
 # Function to encrypt the padded data using AES
 def encrypt_data(padded_data, key, iv):
-    cipher = AES.new(key, AES.MODE_CBC, iv)
+    cipher = AES.new(key.encode(), AES.MODE_CBC, iv)
     return cipher.encrypt(padded_data)
+
+# Convert Key to MD5
+def generate_hashkey(key):
+    md5key = hashlib.md5(key.encode()).hexdigest()
+    return md5key
 
 # Block Variables
 random_bytes = '09660'
@@ -36,18 +41,20 @@ local_counter = '5417'
 event = '5:fim_registry_value:{"component":"fim_registry_value","data":{"begin":"bf7d73bf961e87f87e29fcf6ef83a984099082c0","checksum":"a1a06a43ecd079ced172160cc4bb4ddea9f52bd6","end":"bf8703e84effcff1863e5410ac022229045d23b3","id":1744015875},"type":"integrity_check_right"}'
 
 # Agent Key and Initial Vector
-key = b"2bbc195974c7e0f66fe4a2e4b32f4cc4"
+key = "b6a55196436b30d5c61e0394db7b5d2cfe61cd31557413586c1b80fb5981041c"
 iv = b"FEDCBA0987654321"
+
+# Step 0: Convert Key to MD5 (make sure it's 16 characters)
+md5key = generate_hashkey(key)
+print(f"Agent MD5 Key: {md5key} \n")
 
 # Step 1: Create the block
 block = create_block(random_bytes, global_counter, local_counter, event)
-print()
 print(f"Block: {block} \n")
 
-
 # Step 2: MD5 Hash
-hash_value = generate_hash(block)  # This gives the MD5 hash as a 32-byte string (hexadecimal)
-print(f"MD5 Hash (32-byte hexadecimal): {hash_value} \n")
+hash_value = generate_hash(block)
+print(f"MD5 Block Hash (32-byte hexadecimal): {hash_value} \n")
 
 # Step 3: Merge the MD5 hash with the block
 merged_data = str(hash_value) + block
@@ -58,9 +65,10 @@ compressed_data = compress_data(merged_data.encode())
 
 # Step 5: Add "!" padding to the compressed data
 padded_data = add_padding(compressed_data)
+print(f"Data before Padding: {padded_data} \n")
 
 # Step 6: Encrypt data using AES
-encrypted_data = encrypt_data(padded_data, key, iv)
+encrypted_data = encrypt_data(padded_data, md5key, iv)
 print(f"Encrypted Data Before Tagging: {encrypted_data} \n")
 
 # Final Payload
