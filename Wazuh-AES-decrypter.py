@@ -2,6 +2,7 @@ import re
 from Crypto.Cipher import AES
 import zlib
 import binascii
+import hashlib
 
 # Function to remove padding
 def remove_padding(data):
@@ -9,20 +10,30 @@ def remove_padding(data):
 
 # Function to decrypt the encrypted data using AES
 def decrypt_data(encrypted_data, key, iv):
-    cipher = AES.new(key, AES.MODE_CBC, iv)
+    cipher = AES.new(key.encode(), AES.MODE_CBC, iv)
     decrypted_data = cipher.decrypt(encrypted_data)
     return decrypted_data
 
+# Convert Key to MD5
+def generate_hashkey(key):
+    md5key = hashlib.md5(key.encode()).hexdigest()
+    return md5key
+
 # Agent Key and Intial Vector
-key = b"2bbc195974c7e0f66fe4a2e4b32f4cc4"
+key = "b6a55196436b30d5c61e0394db7b5d2cfe61cd31557413586c1b80fb5981041c"
 iv = b"FEDCBA0987654321"
 
-received_encrypted_data = '2130303921234145533a4eb448d19d13126b42743833cc823071371d3f73bab521ee4e40294e615f59163057870964f22dba56473ef91f9c0858ac9c6f67a017b6cf9d6e0e6f92d3815a04acddcfdd13ce08e2827643f1d95feaa88e242508b7d25499385230e82bfa0a6e842e447884db033c8cc1054326b53a61f11a6c5bed38e19dd85ac269218dc376f5f3c38da056039abf4d35f1a5518dd873f13428b0021660efab852c531391e445680183a0bd0be2b057ed2103edd91087db52ed6ce627fb1aaeb00c3715909812005f303913aa3f30b9a7f1b6f2ef4b4571f6abf56d3eb4ac8919b6a51dc3'  # Replace this with the actual encrypted data from your encryption script
+received_encrypted_data = '8a0000002130303921234145533a9aac9950d3096134f3166ae3f965989f1f613de843e1d0e4aa9a894750a2f1531c2e9a19231bab4d10a9a583a8bcf89551971f732e14195a1e71dca509174ed633deea1498e0ae8c580a3e1f9be5904dfffabd59beab278dd93a70be39bb846795a6a4eb59c3ffc6084f9284dcef6ad355a4ee2d87e286dc7bcfcb761c00d1ff'  # Replace this with the actual encrypted data from your encryption script
 
-# Convert hex data to bytes
+# Step 0: Convert Key to MD5 (make sure it's 16 characters)
+key = generate_hashkey(key)
+print(f"Agent MD5 Key: {key} \n")
+
 data = bytes.fromhex(received_encrypted_data)
+
 print()
 print(f"Message in bytes: {data}\n")
+
 # Step 1: Check if the pattern "!<3-digit numbers>!#AES" exists in the payload
 pattern = re.compile(rb'!(\d{3})!#AES:')
 
@@ -49,6 +60,6 @@ print(f"Remove Padding: {cleaned_data} \n")
 # Step 3: Decompress the cleaned data
 try:
     decompressed_data = zlib.decompress(cleaned_data)
-    print(f"Decompressed Plaintext: {decompressed_data} \n" )
+    print(f"Decompressed Plaintext: {decompressed_data.decode('utf -8')} \n" )
 except zlib.error as e:
     print("Error during decompression:", e)
